@@ -3,35 +3,42 @@ package render
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"path/filepath"
-	"text/template"
+
+	"github.com/Johan-Liebert1/gowebapp/packages/config"
 )
 
 var functions = template.FuncMap{}
+
+var app *config.AppConfig
+
+// sets the config for templates package
+func NewTemplates(a *config.AppConfig) {
+	app = a
+}
 
 /*
 Renders templates using HTML templates
 */
 func RenderTemplate(w http.ResponseWriter, templateName string) {
-	tc, err := CreateTemplateCache()
+	// get the template cache from app config
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	tc := app.TemplateCache
 
 	t, ok := tc[templateName]
 
 	if !ok {
-		log.Fatal(err)
+		log.Fatal("cannnot find template")
 	}
 
 	buffer := new(bytes.Buffer)
 
 	_ = t.Execute(buffer, nil)
 
-	_, err = buffer.WriteTo(w)
+	_, err := buffer.WriteTo(w)
 
 	if err != nil {
 		fmt.Println(err)
@@ -39,7 +46,6 @@ func RenderTemplate(w http.ResponseWriter, templateName string) {
 }
 
 func CreateTemplateCache() (map[string]*template.Template, error) {
-
 	myCache := map[string]*template.Template{}
 
 	pages, err := filepath.Glob("./html/*.page.html")
